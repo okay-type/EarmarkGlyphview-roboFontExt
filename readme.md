@@ -2,7 +2,9 @@
 
 by Jackson Showalter-Cavanaugh (www.okaytype.com)
 
-![Marky Mark Icon](/source/resources/ScreenShot.png  =333x)
+![Marky Mark ScreenShot](/source/resources/ScreenShot.png)
+
+<img src="/source/resources/ScreenShot.png" width="333" alt="Marky Mark ScreenShot">
 
 What does this extension do? It adds a triangle in the upper right corner of Robofont's glyph edit window showing the current glyph's markColor. If there is no markColor, the triangle is a greyish placeholder.
 
