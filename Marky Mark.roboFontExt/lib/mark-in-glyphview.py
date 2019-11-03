@@ -2,11 +2,11 @@ from AppKit import NSApp
 import mojo.drawingTools as ctx
 from mojo.events import addObserver, removeObserver
 from mojo.canvas import CanvasGroup
-from mojo.UI import CurrentGlyphWindow
+from mojo.UI import getGlyphViewDisplaySettings
 from vanilla import Window
 
 
-# version 1.0.0
+# version 1.0.1
 # ok@yty.pe
 
 # debug adds an window to remove the observers it helps when testing but you still need to close and open a new glyph window
@@ -42,7 +42,14 @@ class MarkyMark(object):
 
     def observerGlyphWindowWillOpen(self, notification):
         self.window = notification["window"]
-        self.markview = CanvasGroup((-s, 0, s, s), delegate=CanvasStuff(self.window))
+        if getGlyphViewDisplaySettings()['Rulers']:
+            ruler_offset = 17
+        else:
+            ruler_offset = 0
+
+        self.markview = CanvasGroup(
+            (-s, ruler_offset, s + ruler_offset, s + ruler_offset),
+            delegate=CanvasStuff(self.window))
         self.window.addGlyphEditorSubview(self.markview)
 
     def observerDraw(self, notification):
@@ -95,4 +102,3 @@ class CanvasStuff(object):
 
 
 MarkyMark()
-
