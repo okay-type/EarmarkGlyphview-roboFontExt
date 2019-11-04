@@ -2,11 +2,11 @@ from AppKit import NSApp
 import mojo.drawingTools as ctx
 from mojo.events import addObserver, removeObserver
 from mojo.canvas import CanvasGroup
-from mojo.UI import CurrentGlyphWindow
+from mojo.UI import getGlyphViewDisplaySettings
 from vanilla import Window
 
 
-# version 1.0.0
+# version 1.0.1
 # ok@yty.pe
 
 # debug adds an window to remove the observers it helps when testing but you still need to close and open a new glyph window
@@ -42,7 +42,8 @@ class MarkyMark(object):
 
     def observerGlyphWindowWillOpen(self, notification):
         self.window = notification["window"]
-        self.markview = CanvasGroup((-s, 0, s, s), delegate=CanvasStuff(self.window))
+        xywh = (-s, 0, s, s)
+        self.markview = CanvasGroup(xywh, delegate=self)
         self.window.addGlyphEditorSubview(self.markview)
 
     def observerDraw(self, notification):
@@ -54,16 +55,13 @@ class MarkyMark(object):
         if self.markview:
             self.markview.show(False)
 
-
-class CanvasStuff(object):
-    def __init__(self, w):
-        self.window = w
+    # canvas stuff
     def opaque(self):
         return False
     def acceptsFirstResponder(self):
         return False
     def acceptsMouseMoved(self):
-        return True
+        return False
     def becomeFirstResponder(self):
         return False
     def resignFirstResponder(self):
@@ -71,6 +69,13 @@ class CanvasStuff(object):
     def shouldDrawBackground(self):
         return False
     def draw(self):
+        # update to shift around for the ruler - thanks, frank
+        rulerOffset = 0
+        if getGlyphViewDisplaySettings()['Rulers']:
+            rulerOffset = 17
+        xywh = (-s, rulerOffset, s, s+rulerOffset)
+        self.markview.setPosSize(xywh)
+        # draw mark colored triangle
         glyph = self.window.getGlyph()
         if glyph is None:
             return
@@ -92,6 +97,7 @@ class CanvasStuff(object):
         ctx.closePath()
         ctx.drawPath()
         ctx.fill(None)
+
 
 
 MarkyMark()
