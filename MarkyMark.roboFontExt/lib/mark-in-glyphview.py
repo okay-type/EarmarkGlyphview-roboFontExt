@@ -6,7 +6,7 @@ from mojo.UI import getGlyphViewDisplaySettings
 from vanilla import Window
 
 
-# version 1.0.1
+# version 1.0.2
 # ok@yty.pe
 
 # debug adds an window to remove the observers it helps when testing but you still need to close and open a new glyph window
@@ -34,6 +34,7 @@ class MarkyMark(object):
         addObserver(self, "observerGlyphWindowWillOpen", "glyphWindowWillOpen")
         addObserver(self, "observerDraw", "draw")
         addObserver(self, "observerDrawPreview", "drawPreview")
+        self.color = None
 
     def windowClose(self, sender):
         removeObserver(self, "glyphWindowWillOpen")
@@ -87,16 +88,19 @@ class MarkyMark(object):
         else:
             r = g = b = 0
             a = .1
-        x, y, w, h = self.window.getVisibleRect()
-        ctx.fill(r,g,b,a)
-        ctx.stroke(None)
-        ctx.newPath()
-        ctx.moveTo((x+s, y+s))
-        ctx.lineTo((x+s, y))
-        ctx.lineTo((x, y+s))
-        ctx.closePath()
-        ctx.drawPath()
-        ctx.fill(None)
+        # only redraw is color has changed
+        if self.color != (r,g,b,a):
+            self.color = (r,g,b,a)
+            x, y, w, h = self.window.getVisibleRect()
+            ctx.fill(r,g,b,a)
+            ctx.stroke(None)
+            ctx.newPath()
+            ctx.moveTo((x+s, y+s))
+            ctx.lineTo((x+s, y))
+            ctx.lineTo((x, y+s))
+            ctx.closePath()
+            ctx.drawPath()
+            ctx.fill(None)
 
 
 
