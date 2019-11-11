@@ -88,19 +88,17 @@ class MarkyMark(object):
         else:
             r = g = b = 0
             a = .1
-        # only redraw is color has changed
-        if self.color != (r,g,b,a):
-            self.color = (r,g,b,a)
-            x, y, w, h = self.window.getVisibleRect()
-            ctx.fill(r,g,b,a)
-            ctx.stroke(None)
-            ctx.newPath()
-            ctx.moveTo((x+s, y+s))
-            ctx.lineTo((x+s, y))
-            ctx.lineTo((x, y+s))
-            ctx.closePath()
-            ctx.drawPath()
-            ctx.fill(None)
+        self.color = (r,g,b,a)
+        x, y, w, h = self.window.getVisibleRect()
+        ctx.fill(r,g,b,a)
+        ctx.stroke(None)
+        ctx.newPath()
+        ctx.moveTo((x+s, y+s))
+        ctx.lineTo((x+s, y))
+        ctx.lineTo((x, y+s))
+        ctx.closePath()
+        ctx.drawPath()
+        ctx.fill(None)
 
 
 
