@@ -4,23 +4,24 @@ from mojo.events import addObserver, removeObserver
 from mojo.canvas import CanvasGroup
 from mojo.UI import getGlyphViewDisplaySettings
 from vanilla import Window
-from pprint import pprint
+from mojo.UI import CurrentWindow
 
-# version 1.4
+# version 1.5
 # ok@yty.pe
 
-# debug adds an window to remove the observers it helps when testing but you still need to close and open a new glyph window
 debug = False
 
-# size of mark flag
-s = 66
+# window manager dictionary
 windowViewManger = {}
 
+# flag size
+size = 66
 
 
 class MarkyMark(object):
 
     def __init__(self):
+        # debug manager
         self.windowname = 'Debug MarkyMark'
         for window in [w for w in NSApp().orderedWindows() if w.isVisible()]:
             if window.title() == self.windowname:
@@ -30,46 +31,59 @@ class MarkyMark(object):
             self.w = Window(self.widthheight, self.windowname)
             self.w.bind("close", self.windowClose)
             self.w.open()
-        self.view = None
 
-        self.markview = None
+        # observers
         addObserver(self, "observerGlyphWindowDidOpen", "glyphWindowDidOpen")
+        addObserver(self, "removeFromWindowViewManger", "glyphWindowWillClose")
+        addObserver(self, 'updateSelfWindow', 'currentGlyphChanged')
         addObserver(self, "observerDraw", "draw")
         addObserver(self, "observerDrawPreview", "drawPreview")
-        addObserver(self, "removeFromWindowViewManger", "glyphWindowWillClose")
+
 
     def windowClose(self, sender):
         removeObserver(self, "glyphWindowDidOpen")
+        removeObserver(self, "glyphWindowWillClose")
+        removeObserver(self, "currentGlyphChanged")
         removeObserver(self, "draw")
         removeObserver(self, "drawPreview")
-        removeObserver(self, "glyphWindowWillClose")
+
 
     def observerGlyphWindowDidOpen(self, notification):
         self.window = notification["window"]
-        xywh = (-s, 0, s, s)
+        xywh = (-size, 0, size, size)
         self.markview = CanvasGroup(xywh, delegate=CanvasStuff(self.window))
         self.window.addGlyphEditorSubview(self.markview)
         # add to windowmanger dictionary
         windowViewManger[self.window] = self.markview
 
+
+    def removeFromWindowViewManger(self, notification):
+        # clean up dict when window is closed
+        del windowViewManger[notification['window']]
+
+
+    def updateSelfWindow(self, notification):
+        # set window to the active window
+        self.window = CurrentWindow()
+
+
     def observerDraw(self, notification):
-        if self.markview:
-            self.markview.show(True)
+        markview = windowViewManger.get(self.window)
+        if markview is not None:
+            markview.show(True)
+
 
     def observerDrawPreview(self, notification):
-        # hide the view in Preview mode
-        if self.markview:
-            self.markview.show(False)
+        markview = windowViewManger.get(self.window)
+        if markview is not None:
+            markview.show(False)
 
-    # clean up dict when window is closed
-    def removeFromWindowViewManger(self, notification):
-        del windowViewManger[notification['window']]
 
 
 
 class CanvasStuff(object):
-    def __init__(self, w):
-        self.window = w
+    def __init__(self, window):
+        self.w = window
     def opaque(self):
         return False
     def acceptsFirstResponder(self):
@@ -84,15 +98,15 @@ class CanvasStuff(object):
         return False
     def draw(self):
         # get glyph
-        glyph = self.window.getGlyph()
+        glyph = self.w.getGlyph()
         if glyph is None:
             return
         # update to shift around for the ruler - thanks, frank
         rulerOffset = 0
         if getGlyphViewDisplaySettings()['Rulers']:
             rulerOffset = 17
-        xywh = (-s, rulerOffset, s, s+rulerOffset)
-        markview = windowViewManger.get(self.window) # get from dict
+        xywh = (-size, rulerOffset, size, size+rulerOffset)
+        markview = windowViewManger.get(self.w)
         markview.setPosSize(xywh)
         # draw mark colored triangle
         if glyph.markColor:
@@ -103,18 +117,21 @@ class CanvasStuff(object):
         else:
             r = g = b = 0
             a = .1
-        x, y, w, h = self.window.getVisibleRect()
+        x, y, w, h = self.w.getVisibleRect()
         ctx.fill(r,g,b,a)
         ctx.stroke(None)
         ctx.newPath()
-        ctx.moveTo((x+s, y+s))
-        ctx.lineTo((x+s, y))
-        ctx.lineTo((x, y+s))
+        ctx.moveTo((x+size, y+size))
+        ctx.lineTo((x+size, y))
+        ctx.lineTo((x, y+size))
         ctx.closePath()
         ctx.drawPath()
         ctx.fill(None)
 
 
 
+
 MarkyMark()
+
+
 
